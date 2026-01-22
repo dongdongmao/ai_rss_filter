@@ -1,0 +1,18 @@
+feedparser==6.0.10
+requests==2.31.0
+transformers==4.36.2
+torch==2.1.2
+numpy==1.24.3
+pandas==2.0.3
+python-telegram-bot==20.3
+python-dotenv==1.0.0
+beautifulsoup4==4.12.2
+aiohttp==3.9.1
+
+# Hugging Face Spaces support
+gradio==4.11.0
+schedule==1.2.0
+
+# Optional but recommended
+gunicorn==21.2.0
+uvicorn==0.24.0

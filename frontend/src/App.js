@@ -5,7 +5,8 @@ import ResultsPanel from './components/ResultsPanel';
 import ConfigPanel from './components/ConfigPanel';
 import './App.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Use relative path for production, fallback to localhost for development
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 function App() {
   const [activeTab, setActiveTab] = useState('filter');

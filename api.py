@@ -1,9 +1,10 @@
 """FastAPI backend for RSS Filter"""
 import os
 import json
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import asyncio
@@ -26,13 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount React frontend static files if available
-FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend", "build")
-if os.path.exists(FRONTEND_BUILD_DIR):
-    try:
-        app.mount("/", StaticFiles(directory=FRONTEND_BUILD_DIR, html=True), name="static")
-    except Exception as e:
-        print(f"Warning: Could not mount frontend: {e}")
+# Frontend build directory (relative to api.py location)
+FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(__file__), "frontend", "build")
+FRONTEND_AVAILABLE = os.path.exists(FRONTEND_BUILD_DIR)
 
 # Initialize components
 try:
@@ -77,17 +74,17 @@ class ConfigResponse(BaseModel):
 
 # API Endpoints
 
-@app.get("/")
-async def root():
-    """Health check"""
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint"""
     return {
         "status": "ok", 
         "message": "RSS Filter API is running",
-        "frontend_available": os.path.exists(FRONTEND_BUILD_DIR),
+        "frontend_available": FRONTEND_AVAILABLE,
         "components_initialized": all([fetcher, classifier, content_filter])
     }
 
-@app.get("/config")
+@app.get("/api/config")
 async def get_config() -> ConfigResponse:
     """Get current configuration"""
     try:
@@ -107,7 +104,7 @@ async def get_config() -> ConfigResponse:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/filter")
+@app.post("/api/filter")
 async def run_filter(request: FilterRequest) -> FilterResponse:
     """Run RSS filter with specified parameters"""
     try:
@@ -170,7 +167,7 @@ async def run_filter(request: FilterRequest) -> FilterResponse:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/notify/telegram")
+@app.post("/api/notify/telegram")
 async def send_telegram(articles: list = None):
     """Send articles to Telegram"""
     try:
@@ -189,7 +186,7 @@ async def send_telegram(articles: list = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/notify/email")
+@app.post("/api/notify/email")
 async def send_email(articles: list = None):
     """Send articles to Email"""
     try:
@@ -208,8 +205,48 @@ async def send_email(articles: list = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Serve React frontend static files
+if FRONTEND_AVAILABLE:
+    # Mount static files (CSS, JS, images, etc.)
+    app.mount("/static", StaticFiles(directory=os.path.join(FRONTEND_BUILD_DIR, "static")), name="static")
+    
+    # Serve index.html for all non-API routes (SPA support)
+    @app.get("/")
+    async def serve_frontend():
+        """Serve React frontend"""
+        return FileResponse(os.path.join(FRONTEND_BUILD_DIR, "index.html"))
+    
+    @app.get("/{full_path:path}")
+    async def serve_frontend_routes(full_path: str):
+        """Catch-all route for React SPA routing"""
+        # If path starts with 'api', let it 404 naturally
+        if full_path.startswith("api"):
+            raise HTTPException(status_code=404, detail="API endpoint not found")
+        
+        # Check if it's a static file that exists
+        file_path = os.path.join(FRONTEND_BUILD_DIR, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        
+        # Otherwise, serve index.html for client-side routing
+        return FileResponse(os.path.join(FRONTEND_BUILD_DIR, "index.html"))
+else:
+    @app.get("/")
+    async def root():
+        """Root endpoint when frontend is not available"""
+        return {
+            "status": "ok",
+            "message": "RSS Filter API is running",
+            "frontend_available": False,
+            "api_docs": "/docs"
+        }
+
 if __name__ == "__main__":
     import uvicorn
     # For Hugging Face Spaces: use port 7860
     port = int(os.getenv("PORT", 7860))
+    print(f"Starting server on port {port}")
+    print(f"Frontend available: {FRONTEND_AVAILABLE}")
+    if FRONTEND_AVAILABLE:
+        print(f"Frontend directory: {FRONTEND_BUILD_DIR}")
     uvicorn.run(app, host="0.0.0.0", port=port)

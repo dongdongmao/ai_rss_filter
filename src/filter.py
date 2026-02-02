@@ -24,15 +24,9 @@ class ContentFilter:
         self.spam_threshold = self.config.get("spam_threshold", 0.4)
     
     def filter_articles(self, articles: List[Dict]) -> List[Dict]:
-        """Filter articles based on multiple criteria"""
-        filtered = []
-        
-        for article in articles:
-            if self._is_quality_article(article):
-                filtered.append(article)
-        
-        logger.info(f"Filtered: {len(articles)} -> {len(filtered)} articles")
-        return filtered
+        """Return all articles without filtering (filter conditions disabled)."""
+        logger.info(f"Filter disabled: passing through all {len(articles)} articles")
+        return list(articles)
     
     def _is_quality_article(self, article: Dict) -> bool:
         """Check if article meets quality criteria"""

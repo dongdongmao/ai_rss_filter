@@ -41,18 +41,10 @@ echo "  ✓ Setup complete!"
 echo "========================================"
 echo ""
 
-echo "Next steps:
-"
-echo "1. Configure environment variables:"
-echo "   cp .env.example .env"
-echo "   # Edit .env file and add your Telegram Token etc
-"
-echo "2. Run quick setup wizard:"
-echo "   python quickstart.py
-"
-echo "3. First test:"
-echo "   python main.py
-"
-echo "4. Start scheduled tasks:"
-echo "   python scheduler.py
-"
+echo "Next steps:"
+echo ""
+echo "1. Configure (optional): cp .env.example .env"
+echo "2. Web app: python api.py  (then open http://localhost:7860)"
+echo "3. CLI test: python main.py"
+echo "4. Scheduler: python scheduler.py"
+echo ""

@@ -37,15 +37,8 @@ Write-Host "  ✓ Setup complete!" -ForegroundColor Green
 Write-Host "========================================`n" -ForegroundColor Green
 
 Write-Host "Next steps:`n" -ForegroundColor Yellow
-Write-Host "1. Configure environment variables:"
-Write-Host "   copy .env.example .env"
-Write-Host "   # Edit .env file and add your Telegram Token etc`n"
-
-Write-Host "2. Run quick setup wizard:"
-Write-Host "   python quickstart.py`n"
-
-Write-Host "3. First test:"
-Write-Host "   python main.py`n"
-
-Write-Host "4. Start scheduled tasks:"
-Write-Host "   python scheduler.py`n"
+Write-Host "1. Configure (optional): copy .env.example .env"
+Write-Host "2. Web app: python api.py  (then open http://localhost:7860)"
+Write-Host "3. CLI test: python main.py"
+Write-Host "4. Scheduler: python scheduler.py"
+Write-Host ""

@@ -1,72 +1,68 @@
 import React from 'react';
 import './FilterPanel.css';
 
-function FilterPanel({ params, onChange, onFilter, loading }) {
-  const handleChange = (field, value) => {
-    onChange({
-      ...params,
-      [field]: value
-    });
+const TOPIC_LABELS = {
+  tech: 'Technology',
+  ai: 'AI / ML',
+  crypto: 'Crypto',
+  general: 'General'
+};
+
+function FilterPanel({ topics = [], selectedTopics = [], onSelectTopics, maxArticles, onMaxArticlesChange, onFilter, loading }) {
+  const handleToggle = (topic) => {
+    const next = selectedTopics.includes(topic)
+      ? selectedTopics.filter((t) => t !== topic)
+      : [...selectedTopics, topic];
+    onSelectTopics(next);
+  };
+
+  const handleSelectAll = () => {
+    onSelectTopics(topics.length ? [...topics] : []);
+  };
+
+  const handleClearAll = () => {
+    onSelectTopics([]);
   };
 
   return (
     <div className="filter-panel">
-      <h2>Adjust Filter Parameters</h2>
-      
-      <div className="control-group">
-        <label>
-          Classification Confidence Threshold: {params.confidence_threshold.toFixed(2)}
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          value={params.confidence_threshold}
-          onChange={(e) => handleChange('confidence_threshold', parseFloat(e.target.value))}
-        />
+      <h2>Select Topics</h2>
+      <p className="filter-hint">Choose topics to filter content. Leave all unchecked to show all.</p>
+
+      <div className="topics-group">
+        <div className="topics-actions">
+          <button type="button" className="btn-link" onClick={handleSelectAll}>Select all</button>
+          <span className="sep">|</span>
+          <button type="button" className="btn-link" onClick={handleClearAll}>Clear</button>
+        </div>
+        <div className="topic-checkboxes">
+          {topics.length === 0 ? (
+            <p className="no-topics">Loading topics…</p>
+          ) : (
+            topics.map((topic) => (
+              <label key={topic} className="topic-check">
+                <input
+                  type="checkbox"
+                  checked={selectedTopics.includes(topic)}
+                  onChange={() => handleToggle(topic)}
+                />
+                <span>{TOPIC_LABELS[topic] || topic}</span>
+              </label>
+            ))
+          )}
+        </div>
       </div>
 
       <div className="control-group">
-        <label>
-          Spam Score Threshold: {params.spam_threshold.toFixed(2)}
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          value={params.spam_threshold}
-          onChange={(e) => handleChange('spam_threshold', parseFloat(e.target.value))}
-        />
-      </div>
-
-      <div className="control-group">
-        <label>
-          Minimum Content Length: {params.min_content_length} chars
-        </label>
-        <input
-          type="range"
-          min="10"
-          max="500"
-          step="10"
-          value={params.min_content_length}
-          onChange={(e) => handleChange('min_content_length', parseInt(e.target.value))}
-        />
-      </div>
-
-      <div className="control-group">
-        <label>
-          Maximum Articles to Display: {params.max_articles}
-        </label>
-        <input
-          type="range"
-          min="1"
-          max="50"
-          step="1"
-          value={params.max_articles}
-          onChange={(e) => handleChange('max_articles', parseInt(e.target.value))}
-        />
+        <label>Max articles to show</label>
+        <select
+          value={maxArticles}
+          onChange={(e) => onMaxArticlesChange(Number(e.target.value))}
+        >
+          {[5, 10, 15, 20, 30, 50].map((n) => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+        </select>
       </div>
 
       <button

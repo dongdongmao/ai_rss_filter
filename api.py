@@ -55,9 +55,7 @@ except Exception as e:
 
 # Request/Response Models
 class FilterRequest(BaseModel):
-    confidence_threshold: float = 0.7
-    min_content_length: int = 50
-    spam_threshold: float = 0.4
+    topics: List[str] = []  # Selected topic ids (e.g. tech, ai). Empty = all topics.
     max_articles: int = 10
 
 class FilterResponse(BaseModel):
@@ -69,11 +67,9 @@ class FilterResponse(BaseModel):
 
 class ConfigResponse(BaseModel):
     sources: list
+    categories: list  # Available topics from config (e.g. tech, ai, crypto)
     model_name: str
     device: str
-    confidence_threshold: float
-    min_content_length: int
-    spam_threshold: float
 
 class ManualArticleInput(BaseModel):
     title: str
@@ -83,9 +79,6 @@ class ManualArticleInput(BaseModel):
 
 class ManualFilterRequest(BaseModel):
     articles: List[ManualArticleInput]
-    confidence_threshold: float = 0.3
-    min_content_length: int = 20
-    spam_threshold: float = 0.7
     max_articles: int = 10
 
 # API Endpoints
@@ -102,20 +95,22 @@ async def health_check():
 
 @app.get("/api/config")
 async def get_config() -> ConfigResponse:
-    """Get current configuration"""
+    """Get current configuration including available topics"""
     try:
         with open("config/rss_sources.json") as f:
             config = json.load(f)
         
         sources = config.get("sources", [])
+        # Topics = category keys from config + unique categories from sources
+        category_keys = list(config.get("categories", {}).keys())
+        source_cats = {s.get("category", "general") for s in sources if s.get("category")}
+        categories = sorted(set(category_keys) | source_cats)
         
         return ConfigResponse(
             sources=sources,
+            categories=categories,
             model_name=os.getenv("MODEL_NAME", "distilbert-base-uncased"),
-            device=os.getenv("DEVICE", "cpu"),
-            confidence_threshold=float(os.getenv("CONFIDENCE_THRESHOLD", 0.7)),
-            min_content_length=int(os.getenv("MIN_CONTENT_LENGTH", 50)),
-            spam_threshold=float(os.getenv("SPAM_THRESHOLD", 0.4))
+            device=os.getenv("DEVICE", "cpu")
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -123,79 +118,36 @@ async def get_config() -> ConfigResponse:
 def _get_demo_articles():
     """Generate demo articles for Hugging Face Spaces (when network is unavailable)"""
     return [
-        {
-            "title": "New AI Breakthrough in Natural Language Processing",
-            "content": "Researchers have developed a new transformer architecture that significantly improves understanding of context in long-form text. The model achieves state-of-the-art results on multiple benchmarks including reading comprehension and question answering tasks.",
-            "link": "https://example.com/ai-breakthrough",
-            "source": "Tech News Demo"
-        },
-        {
-            "title": "Open Source Framework Simplifies Machine Learning Deployment",
-            "content": "A new open-source framework makes it easier for developers to deploy machine learning models to production. It includes features for model versioning, A/B testing, and automatic scaling based on traffic patterns.",
-            "link": "https://example.com/ml-framework",
-            "source": "Developer Blog Demo"
-        },
-        {
-            "title": "CLICK HERE FOR AMAZING DEALS!!!",
-            "content": "Buy now! Limited time offer! Click here for exclusive discounts on premium products. Don't miss out on this incredible opportunity!",
-            "link": "https://example.com/ads",
-            "source": "Advertisement Demo"
-        },
-        {
-            "title": "Deep Dive: Understanding Neural Network Architectures",
-            "content": "This comprehensive guide explores different neural network architectures, from simple feedforward networks to complex transformer models. Learn about the mathematical foundations and practical applications of each architecture type.",
-            "link": "https://example.com/neural-networks",
-            "source": "Educational Content Demo"
-        },
-        {
-            "title": "You Won't Believe What Happened Next!",
-            "content": "Shocking results! This one weird trick will change everything. Find out what experts don't want you to know.",
-            "link": "https://example.com/clickbait",
-            "source": "Clickbait Demo"
-        },
-        {
-            "title": "Best Practices for Code Review in Large Teams",
-            "content": "Effective code review processes are essential for maintaining code quality in large development teams. This article covers strategies for constructive feedback, automated checks, and maintaining a positive review culture.",
-            "link": "https://example.com/code-review",
-            "source": "Engineering Blog Demo"
-        },
-        {
-            "title": "FREE MONEY!!! CLICK NOW!!!",
-            "content": "Get rich quick! No investment required! Just click here and start earning thousands of dollars per day from home!",
-            "link": "https://example.com/spam",
-            "source": "Spam Demo"
-        },
-        {
-            "title": "Introduction to Rust: Memory Safety Without Garbage Collection",
-            "content": "Rust is a systems programming language that provides memory safety guarantees without runtime overhead. This tutorial introduces Rust's ownership system, borrowing rules, and how they prevent common programming errors.",
-            "link": "https://example.com/rust-tutorial",
-            "source": "Programming Tutorial Demo"
-        }
+        {"title": "New AI Breakthrough in Natural Language Processing", "content": "Researchers have developed a new transformer architecture that significantly improves understanding of context in long-form text.", "link": "https://example.com/ai-breakthrough", "source": "Tech News Demo", "category": "ai"},
+        {"title": "Open Source Framework Simplifies Machine Learning Deployment", "content": "A new open-source framework makes it easier for developers to deploy machine learning models to production.", "link": "https://example.com/ml-framework", "source": "Developer Blog Demo", "category": "tech"},
+        {"title": "CLICK HERE FOR AMAZING DEALS!!!", "content": "Buy now! Limited time offer! Click here for exclusive discounts.", "link": "https://example.com/ads", "source": "Advertisement Demo", "category": "tech"},
+        {"title": "Deep Dive: Understanding Neural Network Architectures", "content": "This comprehensive guide explores different neural network architectures.", "link": "https://example.com/neural-networks", "source": "Educational Content Demo", "category": "ai"},
+        {"title": "You Won't Believe What Happened Next!", "content": "Shocking results! This one weird trick will change everything.", "link": "https://example.com/clickbait", "source": "Clickbait Demo", "category": "tech"},
+        {"title": "Best Practices for Code Review in Large Teams", "content": "Effective code review processes are essential for maintaining code quality in large development teams.", "link": "https://example.com/code-review", "source": "Engineering Blog Demo", "category": "tech"},
+        {"title": "FREE MONEY!!! CLICK NOW!!!", "content": "Get rich quick! No investment required!", "link": "https://example.com/spam", "source": "Spam Demo", "category": "tech"},
+        {"title": "Introduction to Rust: Memory Safety Without Garbage Collection", "content": "Rust is a systems programming language that provides memory safety guarantees.", "link": "https://example.com/rust-tutorial", "source": "Programming Tutorial Demo", "category": "tech"}
     ]
 
 @app.post("/api/filter")
 async def run_filter(request: FilterRequest) -> FilterResponse:
-    """Run RSS filter with specified parameters"""
+    """Run RSS filter; optionally restrict by selected topics."""
     try:
-        # Update filter parameters
-        content_filter.confidence_threshold = request.confidence_threshold
-        content_filter.min_content_length = request.min_content_length
-        content_filter.spam_threshold = request.spam_threshold
-        
         # Step 1: Fetch articles
         try:
             articles = fetcher.fetch_feeds()
             total_fetched = len(articles)
-            
-            # If no articles fetched (likely network issue), use demo data
             if not articles:
                 articles = _get_demo_articles()
                 total_fetched = len(articles)
         except Exception as e:
-            # Network unavailable, use demo data
             logger.warning(f"Failed to fetch RSS feeds (network may be unavailable): {e}")
             articles = _get_demo_articles()
             total_fetched = len(articles)
+        
+        # Filter by selected topics (category) if any
+        if request.topics:
+            topics_set = set(t.lower() for t in request.topics)
+            articles = [a for a in articles if (a.get("category") or "general").lower() in topics_set]
         
         if not articles:
             return FilterResponse(
@@ -232,6 +184,7 @@ async def run_filter(request: FilterRequest) -> FilterResponse:
                 "content": article.get("content"),
                 "link": article.get("link"),
                 "source": article.get("source"),
+                "topic": article.get("category", "general"),
                 "quality_score": round(classification.get("quality_score", 0), 3),
                 "spam_score": round(classification.get("spam_score", 0), 3),
                 "confidence": round(classification.get("confidence", 0), 3)
@@ -249,13 +202,8 @@ async def run_filter(request: FilterRequest) -> FilterResponse:
 
 @app.post("/api/filter/manual")
 async def run_filter_manual(request: ManualFilterRequest) -> FilterResponse:
-    """Run filter on manually provided articles"""
+    """Run filter on manually provided articles (uses server default thresholds)"""
     try:
-        # Update filter parameters
-        content_filter.confidence_threshold = request.confidence_threshold
-        content_filter.min_content_length = request.min_content_length
-        content_filter.spam_threshold = request.spam_threshold
-        
         # Convert manual input to article format
         articles = []
         for article_input in request.articles:
@@ -263,7 +211,8 @@ async def run_filter_manual(request: ManualFilterRequest) -> FilterResponse:
                 "title": article_input.title,
                 "content": article_input.content,
                 "link": article_input.link,
-                "source": article_input.source
+                "source": article_input.source,
+                "category": "manual"
             })
         
         total_fetched = len(articles)
@@ -303,6 +252,7 @@ async def run_filter_manual(request: ManualFilterRequest) -> FilterResponse:
                 "content": article.get("content"),
                 "link": article.get("link"),
                 "source": article.get("source"),
+                "topic": article.get("category", "manual"),
                 "quality_score": round(classification.get("quality_score", 0), 3),
                 "spam_score": round(classification.get("spam_score", 0), 3),
                 "confidence": round(classification.get("confidence", 0), 3)

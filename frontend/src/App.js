@@ -32,12 +32,8 @@ function App() {
     { title: '', content: '', link: '', source: 'Manual Input' }
   ]);
 
-  const [filterParams, setFilterParams] = useState({
-    confidence_threshold: 0.3,
-    min_content_length: 20,
-    spam_threshold: 0.7,
-    max_articles: 10
-  });
+  const [selectedTopics, setSelectedTopics] = useState([]);
+  const [maxArticles, setMaxArticles] = useState(10);
 
   // Load configuration on mount
   useEffect(() => {
@@ -70,11 +66,13 @@ function App() {
         }
         response = await axios.post(`${API_URL}/filter/manual`, {
           articles: articlesToFilter,
-          ...filterParams
+          max_articles: maxArticles
         }, { timeout: FILTER_TIMEOUT_MS });
       } else {
-        // Filter RSS feeds (will use demo data if network unavailable)
-        response = await axios.post(`${API_URL}/filter`, filterParams, { timeout: FILTER_TIMEOUT_MS });
+        response = await axios.post(`${API_URL}/filter`, {
+          topics: selectedTopics,
+          max_articles: maxArticles
+        }, { timeout: FILTER_TIMEOUT_MS });
       }
       setResults(response.data);
       setLastArticles(response.data.articles);
@@ -114,12 +112,6 @@ function App() {
             onClick={() => setActiveTab('filter')}
           >
             🚀 Run Filter
-          </button>
-          <button
-            className={`tab ${activeTab === 'notify' ? 'active' : ''}`}
-            onClick={() => setActiveTab('notify')}
-          >
-            📱 Notifications
           </button>
           <button
             className={`tab ${activeTab === 'config' ? 'active' : ''}`}
@@ -207,8 +199,11 @@ function App() {
               )}
 
               <FilterPanel
-                params={filterParams}
-                onChange={setFilterParams}
+                topics={config?.categories ?? []}
+                selectedTopics={selectedTopics}
+                onSelectTopics={setSelectedTopics}
+                maxArticles={maxArticles}
+                onMaxArticlesChange={setMaxArticles}
                 onFilter={handleFilter}
                 loading={loading}
               />

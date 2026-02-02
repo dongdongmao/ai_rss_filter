@@ -42,19 +42,8 @@ function ConfigPanel({ config, onRefresh }) {
       </div>
 
       <div className="config-section">
-        <h3>🎯 Filter Parameters</h3>
-        <div className="config-item">
-          <span className="label">Confidence Threshold:</span>
-          <span className="value">{config.confidence_threshold}</span>
-        </div>
-        <div className="config-item">
-          <span className="label">Minimum Content Length:</span>
-          <span className="value">{config.min_content_length} chars</span>
-        </div>
-        <div className="config-item">
-          <span className="label">Spam Score Threshold:</span>
-          <span className="value">{config.spam_threshold}</span>
-        </div>
+        <h3>📂 Topics</h3>
+        <p className="config-info">Select topics on the Run Filter tab to filter by: {config.categories?.join(', ') || '—'}</p>
       </div>
 
       <div className="config-tip">

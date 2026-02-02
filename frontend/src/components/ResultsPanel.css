@@ -131,6 +131,11 @@
   color: #c62828;
 }
 
+.badge.topic {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
 .article-content {
   color: #666;
   margin: 10px 0;

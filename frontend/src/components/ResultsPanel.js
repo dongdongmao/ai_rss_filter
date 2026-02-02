@@ -32,6 +32,7 @@ function ResultsPanel({ results, loading }) {
                 <h4>{index + 1}. {article.title}</h4>
               </div>
               <div className="article-meta">
+                {article.topic && <span className="badge topic">📂 {article.topic}</span>}
                 <span className="badge">📌 {article.source}</span>
                 <span className="badge quality">⭐ {(article.quality_score * 100).toFixed(0)}%</span>
                 <span className="badge spam">🚫 {(article.spam_score * 100).toFixed(0)}%</span>

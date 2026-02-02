@@ -8,6 +8,18 @@ import './App.css';
 // Use relative path for production, fallback to localhost for development
 const API_URL = process.env.REACT_APP_API_URL || '/api';
 
+// Filter can take long (model load + RSS fetch + classification). Avoid BodyStreamBuffer aborted / timeout.
+const FILTER_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const CONFIG_TIMEOUT_MS = 30 * 1000;    // 30 seconds
+
+function getErrorMessage(err) {
+  const msg = err.response?.data?.detail ?? err.message ?? 'Unknown error';
+  if (msg.includes('aborted') || msg.includes('BodyStreamBuffer') || err.code === 'ECONNABORTED') {
+    return 'Request was cancelled or timed out. The filter may take 1–2 minutes (model loading). Please try again and wait.';
+  }
+  return msg;
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('filter');
   const [loading, setLoading] = useState(false);
@@ -34,11 +46,11 @@ function App() {
 
   const loadConfig = async () => {
     try {
-      const response = await axios.get(`${API_URL}/config`);
+      const response = await axios.get(`${API_URL}/config`, { timeout: CONFIG_TIMEOUT_MS });
       setConfig(response.data);
       setError(null);
     } catch (err) {
-      setError('Failed to load configuration');
+      setError('Failed to load configuration: ' + getErrorMessage(err));
       console.error(err);
     }
   };
@@ -59,15 +71,15 @@ function App() {
         response = await axios.post(`${API_URL}/filter/manual`, {
           articles: articlesToFilter,
           ...filterParams
-        });
+        }, { timeout: FILTER_TIMEOUT_MS });
       } else {
         // Filter RSS feeds (will use demo data if network unavailable)
-        response = await axios.post(`${API_URL}/filter`, filterParams);
+        response = await axios.post(`${API_URL}/filter`, filterParams, { timeout: FILTER_TIMEOUT_MS });
       }
       setResults(response.data);
       setLastArticles(response.data.articles);
     } catch (err) {
-      setError('Failed to run filter: ' + (err.response?.data?.detail || err.message));
+      setError('Failed to run filter: ' + getErrorMessage(err));
     } finally {
       setLoading(false);
     }

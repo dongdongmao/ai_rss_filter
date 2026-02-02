@@ -40,10 +40,6 @@ python api.py
 
 ```bash
 cp .env.example .env
-<<<<<<< HEAD
-=======
-# Edit .env and add Telegram Token (optional)
->>>>>>> 442630110f91a4288aa2c59da972a5ca14e49126
 ```
 
 ## Deployment
@@ -77,26 +73,12 @@ Edit `config/rss_sources.json` to add/modify RSS sources:
 
 - 🤖 AI text classification (BERT/RoBERTa)
 - 🎯 Smart filtering & spam detection
-<<<<<<< HEAD
-=======
-- 📡 Telegram & Email notifications
->>>>>>> 442630110f91a4288aa2c59da972a5ca14e49126
 - 🌐 Modern React web interface
 - 🐳 Docker containerized
 
 ## Environment Variables
 
-Create a `.env` file to enable notifications (optional):
-
-<<<<<<< HEAD
-=======
-```bash
-TELEGRAM_BOT_TOKEN=your_token_here
-TELEGRAM_CHAT_ID=your_chat_id
-EMAIL_SENDER=your_email@gmail.com
-EMAIL_PASSWORD=your_app_password
-```
->>>>>>> 442630110f91a4288aa2c59da972a5ca14e49126
+Create a `.env` file with your configuration (optional):
 
 ## Docker Deployment
 
@@ -112,11 +94,7 @@ docker run -p 7860:7860 ai-rss-filter
 - `GET /` - React web interface
 - `GET /config` - Get configuration
 - `POST /filter` - Run RSS filter
-<<<<<<< HEAD
-=======
-- `POST /notify/telegram` - Send Telegram notification
-- `POST /notify/email` - Send email notification
->>>>>>> 442630110f91a4288aa2c59da972a5ca14e49126
+- `POST /filter/manual` - Filter manually entered articles
 
 ## Project Structure
 
@@ -127,12 +105,7 @@ ai_rss_filter/
 ├── src/                    # Core modules
 │   ├── rss_fetcher.py     # RSS fetching
 │   ├── text_classifier.py # AI classification
-│   ├── filter.py          # Content filtering
-<<<<<<< HEAD
 │   └── notifier.py        # Notification module (placeholder)
-=======
-│   └── notifier.py        # Notifications
->>>>>>> 442630110f91a4288aa2c59da972a5ca14e49126
 ├── config/
 │   └── rss_sources.json   # RSS source config
 └── data/                  # Temporary data
@@ -146,8 +119,4 @@ frontend/
 
 ## License
 
-<<<<<<< HEAD
 This project is licensed under the MIT License.
-=======
-This project is licensed under the MIT License.
->>>>>>> 442630110f91a4288aa2c59da972a5ca14e49126

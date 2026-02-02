@@ -36,6 +36,8 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies
+# Install CPU-only torch first to reduce image size for Hugging Face Spaces
+RUN pip install --no-cache-dir torch==2.1.2 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy Python application
@@ -46,9 +48,6 @@ COPY --from=react-builder /frontend/build ./frontend/build
 
 # Create required directories
 RUN mkdir -p data logs config
-
-# Copy config templates
-COPY config/ ./config/
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1

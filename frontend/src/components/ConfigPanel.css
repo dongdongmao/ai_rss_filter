@@ -1,0 +1,148 @@
+.config-panel {
+  animation: fadeIn 0.3s ease;
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.config-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.btn-refresh {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-refresh:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.config-section {
+  background: #f9f9f9;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.config-section h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.config-info {
+  color: #666;
+  margin: 0 0 15px 0;
+  font-size: 0.9em;
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.source-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.source-item.disabled {
+  opacity: 0.6;
+}
+
+.source-item .status {
+  font-size: 1.2em;
+}
+
+.source-item .name {
+  flex: 1;
+  font-weight: 600;
+  color: #333;
+}
+
+.source-item .category {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #667eea;
+  color: white;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.config-item:last-child {
+  border-bottom: none;
+}
+
+.config-item .label {
+  font-weight: 600;
+  color: #555;
+}
+
+.config-item .value {
+  color: #667eea;
+  font-family: 'Courier New', monospace;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+.config-tip {
+  background: #fffacd;
+  border-left: 4px solid #ffd700;
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+.config-tip p {
+  margin: 0;
+  color: #333;
+}
+
+.config-tip code {
+  background: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  color: #667eea;
+}
+
+@media (max-width: 768px) {
+  .config-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .config-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

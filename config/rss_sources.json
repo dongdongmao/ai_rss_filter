@@ -1,0 +1,42 @@
+{
+  "sources": [
+    {
+      "name": "Hacker News",
+      "url": "https://news.ycombinator.com/rss",
+      "category": "tech",
+      "enabled": true
+    },
+    {
+      "name": "TechCrunch",
+      "url": "http://feeds.techcrunch.com/TechCrunch/",
+      "category": "tech",
+      "enabled": true
+    },
+    {
+      "name": "GitHub Trending",
+      "url": "https://github.com/trending?spoken_language_code=&since=daily",
+      "category": "tech",
+      "enabled": true
+    },
+    {
+      "name": "Medium - AI",
+      "url": "https://medium.com/feed/tag/artificial-intelligence",
+      "category": "ai",
+      "enabled": true
+    }
+  ],
+  "categories": {
+    "tech": {
+      "keywords": ["technology", "software", "hardware", "ai", "machine learning"],
+      "min_priority": 0.6
+    },
+    "ai": {
+      "keywords": ["artificial intelligence", "deep learning", "nlp", "computer vision"],
+      "min_priority": 0.65
+    },
+    "crypto": {
+      "keywords": ["blockchain", "cryptocurrency", "bitcoin", "ethereum"],
+      "min_priority": 0.6
+    }
+  }
+}

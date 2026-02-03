@@ -37,7 +37,7 @@ function ResultsPanel({ results, loading }) {
                 <span className="badge quality">⭐ {(article.quality_score * 100).toFixed(0)}%</span>
                 <span className="badge spam">🚫 {(article.spam_score * 100).toFixed(0)}%</span>
               </div>
-              <p className="article-content">{article.content.substring(0, 150)}...</p>
+              <p className="article-content">{(article.content || '').substring(0, 150)}{(article.content || '').length > 150 ? '...' : ''}</p>
               <div className="article-footer">
                 <a href={article.link} target="_blank" rel="noopener noreferrer" className="read-more">
                   Read More →

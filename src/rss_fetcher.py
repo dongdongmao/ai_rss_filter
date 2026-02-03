@@ -47,19 +47,25 @@ class RSSFetcher:
         if feed.bozo:
             logger.warning(f"Feed parsing warning for {source['name']}: {feed.bozo_exception}")
         
-        for entry in feed.entries[:100]:  # Limit to 30 latest entries per source
+        for entry in feed.entries[:100]:  # Limit per source
+            # Many feeds use "description" instead of "summary"
+            content = entry.get("summary") or entry.get("description") or ""
+            if hasattr(content, "get"):  # could be a dict with type/value
+                content = content.get("value", content.get("#text", "")) if isinstance(content, dict) else str(content)
+            else:
+                content = str(content) if content else ""
+            title = entry.get("title", "")
             article = {
-                "title": entry.get("title", ""),
-                "content": entry.get("summary", ""),
+                "title": title,
+                "content": content[:2000] if content else "",  # cap length
                 "link": entry.get("link", ""),
                 "published": entry.get("published", ""),
                 "source": source["name"],
                 "category": source.get("category", "general"),
                 "author": entry.get("author", "Unknown")
             }
-            
-            # Skip if title or content is too short
-            if len(article["title"]) > 5 and len(article["content"]) > 20:
+            # Only require non-empty title; allow short content so we don't drop articles
+            if len(article["title"].strip()) > 0:
                 articles.append(article)
         
         logger.info(f"Fetched {len(articles)} articles from {source['name']}")

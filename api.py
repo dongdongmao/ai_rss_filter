@@ -134,7 +134,10 @@ async def run_filter(request: FilterRequest) -> FilterResponse:
     try:
         # Step 1: Fetch articles
         try:
-            articles = fetcher.fetch_feeds()
+            if fetcher is not None:
+                articles = fetcher.fetch_feeds()
+            else:
+                articles = []
             total_fetched = len(articles)
             if not articles:
                 articles = _get_demo_articles()
@@ -144,10 +147,13 @@ async def run_filter(request: FilterRequest) -> FilterResponse:
             articles = _get_demo_articles()
             total_fetched = len(articles)
         
-        # Filter by selected topics (category) if any
+        # Filter by selected topics (category) if any; if that would leave 0, show all
         if request.topics:
             topics_set = set(t.lower() for t in request.topics)
-            articles = [a for a in articles if (a.get("category") or "general").lower() in topics_set]
+            by_topic = [a for a in articles if (a.get("category") or "general").lower() in topics_set]
+            if by_topic:
+                articles = by_topic
+            # else: keep all articles so we always show something when we have data
         
         if not articles:
             return FilterResponse(
@@ -158,22 +164,26 @@ async def run_filter(request: FilterRequest) -> FilterResponse:
                 articles=[]
             )
         
-        # Step 2: Classify articles
+        # Step 2: Classify articles (skip if classifier failed to load; use default scores)
         category_labels = ["valuable content", "advertisement", "clickbait", "spam"]
-        articles = classifier.batch_classify(articles, category_labels)
+        if classifier is not None:
+            articles = classifier.batch_classify(articles, category_labels)
+        else:
+            for a in articles:
+                a["classification"] = {"quality_score": 0.7, "spam_score": 0.2, "confidence": 0.8}
         
-        # Step 3: Filter articles
-        filtered = content_filter.filter_articles(articles)
+        # Step 3: Filter articles (pass-through, no dropping)
+        filtered = content_filter.filter_articles(articles) if content_filter else articles
         filtered_count = len(filtered)
         
         # Step 4: Deduplicate
-        unique = content_filter.deduplicate(filtered)
+        unique = content_filter.deduplicate(filtered) if content_filter else filtered
         
         # Step 5: Sort by score
-        sorted_articles = content_filter.sort_by_score(unique)
+        sorted_articles = content_filter.sort_by_score(unique) if content_filter else unique
         
         # Step 6: Limit
-        final = content_filter.limit_articles(sorted_articles, limit=request.max_articles)
+        final = content_filter.limit_articles(sorted_articles, limit=request.max_articles) if content_filter else sorted_articles[:request.max_articles]
         
         # Format response
         formatted_articles = []
@@ -226,22 +236,26 @@ async def run_filter_manual(request: ManualFilterRequest) -> FilterResponse:
                 articles=[]
             )
         
-        # Step 2: Classify articles
+        # Step 2: Classify articles (skip if classifier failed)
         category_labels = ["valuable content", "advertisement", "clickbait", "spam"]
-        articles = classifier.batch_classify(articles, category_labels)
+        if classifier is not None:
+            articles = classifier.batch_classify(articles, category_labels)
+        else:
+            for a in articles:
+                a["classification"] = {"quality_score": 0.7, "spam_score": 0.2, "confidence": 0.8}
         
-        # Step 3: Filter articles
-        filtered = content_filter.filter_articles(articles)
+        # Step 3: Filter articles (currently pass-through)
+        filtered = content_filter.filter_articles(articles) if content_filter else articles
         filtered_count = len(filtered)
         
         # Step 4: Deduplicate
-        unique = content_filter.deduplicate(filtered)
+        unique = content_filter.deduplicate(filtered) if content_filter else filtered
         
         # Step 5: Sort by score
-        sorted_articles = content_filter.sort_by_score(unique)
+        sorted_articles = content_filter.sort_by_score(unique) if content_filter else unique
         
         # Step 6: Limit
-        final = content_filter.limit_articles(sorted_articles, limit=request.max_articles)
+        final = content_filter.limit_articles(sorted_articles, limit=request.max_articles) if content_filter else sorted_articles[:request.max_articles]
         
         # Format response
         formatted_articles = []
